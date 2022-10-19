@@ -88,7 +88,6 @@ def forward_prop(X_train,params):
     x,c=step_up(x,w,b,'sigmoid')
 
     cach.append(c)
-    #print("exited fp")
     return x,cach
 
 def backward_prop(y_pred,Y_train,payload):
@@ -139,8 +138,19 @@ def optimize_params(params,gradients,a):
     #print("params size:",len(params))
     return params
 
+def load_Data(path):
+    df=pd.read_csv(path)
+    shuffled=df.sample(frac=1)
+    n=shuffled.shape[0]
+    m=shuffled.shape[1]
+    X_train=np.array(shuffled.iloc[:int(0.8*n),:m-1]).T
+    Y_train=np.array(shuffled.iloc[:int(0.8*n),m-1]).T
+    X_test = np.array(shuffled.iloc[int(0.8 * n):,:m-1]).T
+    Y_test = np.array(shuffled.iloc[int(0.8 * n):,m-1]).T
+    return [X_train,Y_train,X_test,Y_test]
+
 def NN(dims,iter=100,a=0.00001):
-    [X_train,Y_train,X_test,Y_test,X_val,Y_val] = BT19ECE032_dataset_div_shuffle('./dataset/Matlab_cancer.mat')
+    [X_train,Y_train,X_test,Y_test] = load_Data('diagnosis.csv')
     params=initialize_params(dims)
     #print("X_train:",X_train.shape)
     cost_train=[]
@@ -155,7 +165,7 @@ def NN(dims,iter=100,a=0.00001):
 
         params=optimize_params(params,gradients,a)
 
-    return [params,X_test,Y_test,X_val,Y_val]
+    return [params,X_test,Y_test]
 
 def find_metric(y_pred,y_actual,th):
     y=(y_pred>th).astype(int)
@@ -171,22 +181,23 @@ def find_metric(y_pred,y_actual,th):
 
 
 def BT19ECE032_linreg(arch):
-    [params, X_test, Y_test, X_val, Y_val]=NN(arch,40,0.0001)
+    [params, X_test, Y_test]=NN(arch,40,0.0001)
 
-    y1,t1=forward_prop(X_val,params)
-    y2,t2=forward_prop(X_test,params)
-    print("validation accuracy:",accuracy(y1,Y_val,0.5))
-    print("test accuracy",accuracy(y2,Y_test,0.5))
+    y1,t1=forward_prop(X_test,params)
+    print("test accuracy",accuracy(y1,Y_test,0.5))
     x=[]
     y=[]
     for i in [0.5,0.6,0.7,0.8,0.9,1]:
-        s1,s2,_=find_metric(y2,Y_test,i)
+        s1,s2,mat=find_metric(y1,Y_test,i)
         x.append(s1)
         y.append(1-s2)
+    s1,s2,mat=find_metric(y1,Y_test,0.5)
+    print(s1)
     plt.plot(x,y)
     plt.title('ROC curve')
     plt.xlabel('FPR')
     plt.ylabel('TPR')
     plt.show()
+    print("Confusion matrix:",mat)
     return
-BT19ECE032_linreg([100,80,40,1])
+BT19ECE032_linreg([31,20,1])

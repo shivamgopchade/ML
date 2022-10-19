@@ -76,5 +76,4 @@ def BT19ECE032_svm(path,_gamma,_kernel='rbf'):
     plt.show()
     return y_pred
 
-
 BT19ECE032_svm('./dataset/fisheriris_matlab.mat',0.5)
